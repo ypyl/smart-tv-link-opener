@@ -8,7 +8,7 @@ namespace linkopener.tv
     public class App : Application
     {
         // IP of smart TV
-        private const string Url = "http://192.168.0.106:9696/";
+        private const string UrlFormat = "http://{0}:9696/";
         // server to listen put commands
         private WebServer server;
 
@@ -37,9 +37,9 @@ namespace linkopener.tv
             });
 
         // Create web server to listen PUT with links that we want to open
-        private static WebServer CreateWebServer(ObservableCollection<string> linkCollection) =>
+        private static WebServer CreateWebServer(string url, ObservableCollection<string> linkCollection) =>
             new WebServer(o => o
-                .WithUrlPrefix(Url)
+                .WithUrlPrefix(string.Format(UrlFormat, url))
                 .WithMode(HttpListenerMode.EmbedIO))
                 .OnPut("/", async ctx =>
                 {
@@ -59,7 +59,8 @@ namespace linkopener.tv
 
         private void RunServer()
         {
-            this.server = this.server ?? CreateWebServer(this.linkCollection);
+            var currentIP = Tizen.Network.Connection.ConnectionManager.GetIPAddress(Tizen.Network.Connection.AddressFamily.IPv4);
+            this.server = this.server ?? CreateWebServer(currentIP.ToString(), this.linkCollection);
             server.RunAsync();
         }
 
