@@ -1,0 +1,26 @@
+﻿<Project Sdk="Tizen.NET.Sdk/1.1.6">
+
+  <!-- Property Group for Tizen5.5 Project -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>tizen55</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="lib\" />
+    <Folder Include="res\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
+    <PackageReference Include="Xamarin.Forms" Version="3.2.0.871581" />
+  </ItemGroup>
+
+</Project>
