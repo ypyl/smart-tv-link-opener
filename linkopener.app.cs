@@ -19,91 +19,52 @@ namespace linkopener.tv
         };
         public App()
         {
-            var listView = new ListView();
-            listView.ItemsSource = linkCollection;
-            listView.ItemTapped += (sender, e) =>
-            {
-                // open selected link in the integrated browser on Smart TV
-                var app = new Tizen.Applications.AppControl();
-                app.Operation = Tizen.Applications.AppControlOperations.View;
-                app.Uri = e.Item.ToString();
-                app.LaunchMode = Tizen.Applications.AppControlLaunchMode.Single;
-                Tizen.Applications.AppControl.SendLaunchRequest(app);
-            };
-            // The root page of your application
+            var listView = new ListView { ItemsSource = linkCollection };
+            listView.ItemTapped += (sender, e) => OpenInBrowser(e.Item.ToString());
             MainPage = new ContentPage
             {
                 Content = listView
             };
         }
 
+        // Open selected link in the integrated browser on Smart TV
+        private static void OpenInBrowser(string link) =>
+            Tizen.Applications.AppControl.SendLaunchRequest(new Tizen.Applications.AppControl
+            {
+                Operation = Tizen.Applications.AppControlOperations.View,
+                Uri = link,
+                LaunchMode = Tizen.Applications.AppControlLaunchMode.Single
+            });
+
         // Create web server to listen PUT with links that we want to open
-        private static WebServer CreateWebServer(ObservableCollection<string> linkCollection)
-        {
-            var server = new WebServer(o => o
-                    .WithUrlPrefix(Url)
-                    .WithMode(HttpListenerMode.EmbedIO))
+        private static WebServer CreateWebServer(ObservableCollection<string> linkCollection) =>
+            new WebServer(o => o
+                .WithUrlPrefix(Url)
+                .WithMode(HttpListenerMode.EmbedIO))
                 .OnPut("/", async ctx =>
-                 {
-                     var httpLink = await ctx.GetRequestBodyAsStringAsync();
-                     if (Uri.TryCreate(httpLink, UriKind.Absolute, out _))
-                     {
-                         linkCollection.Insert(0, httpLink);
-                         await ctx.SendDataAsync(null);
-                     }
-                     else
-                     {
-                         await ctx.SendDataAsync(new { Error = "Incorrect link." });
-                     }
-                 });
-            // server.StateChanged += (s, e) => linkCollection.Insert(0, $"WebServer New State - {e.NewState}");
-            // server.OnHttpException += (s, e) =>
-            // {
-            //     linkCollection.Insert(0, $"HttpEx - {e.StatusCode}");
-            //     return Task.CompletedTask;
-            // };
-            // server.OnUnhandledException += (s, e) =>
-            // {
-            //     linkCollection.Insert(0, $"Exception - {e.Message}");
-            //     return Task.CompletedTask;
-            // };
+                {
+                    var httpLink = await ctx.GetRequestBodyAsStringAsync();
+                    if (Uri.TryCreate(httpLink, UriKind.Absolute, out _))
+                    {
+                        linkCollection.Insert(0, httpLink);
+                        await ctx.SendDataAsync(null);
+                    }
+                    else
+                    {
+                        await ctx.SendDataAsync(new { Error = "Incorrect link." });
+                    }
+                });
 
-            return server;
-        }
+        protected override void OnStart() => RunServer();
 
-        protected override void OnStart()
-        {
-            this.server = this.server ?? CreateWebServer(this.linkCollection);
-            server.RunAsync();
-            // catch (Exception ex)
-            // {
-            //     this.linkCollection.Insert(0, ex.Message);
-            // }
-            // finally
-            // {
-            //     this.linkCollection.Insert(0, "Created server");
-            // }
-        }
-
-        protected override void OnSleep()
-        {
-            this.server?.Dispose();
-            // }
-            // catch (Exception ex)
-            // {
-            //     this.linkCollection.Insert(0, ex.Message);
-            // }
-            // finally
-            // {
-            //     this.linkCollection.Insert(0, "Disposed");
-            // }
-
-        }
-
-        protected override void OnResume()
+        private void RunServer()
         {
             this.server = this.server ?? CreateWebServer(this.linkCollection);
             server.RunAsync();
         }
+
+        protected override void OnSleep() => this.server?.Dispose();
+
+        protected override void OnResume() => RunServer();
     }
 }
