@@ -23,6 +23,7 @@ namespace linkopener.tv
             listView.ItemsSource = linkCollection;
             listView.ItemTapped += (sender, e) =>
             {
+                // open selected link in the integrated browser on Smart TV
                 var app = new Tizen.Applications.AppControl();
                 app.Operation = Tizen.Applications.AppControlOperations.View;
                 app.Uri = e.Item.ToString();
@@ -36,6 +37,7 @@ namespace linkopener.tv
             };
         }
 
+        // Create web server to listen PUT with links that we want to open
         private static WebServer CreateWebServer(ObservableCollection<string> linkCollection)
         {
             var server = new WebServer(o => o
